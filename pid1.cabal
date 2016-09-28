@@ -1,0 +1,35 @@
+name:                pid1
+version:             0.1.0.0
+synopsis:            Do signal handling and orphan reaping for Unix PID1 init processes
+description:         Please see README.md
+homepage:            https://github.com/fpco/pid1#readme
+license:             MIT
+license-file:        LICENSE
+author:              Michael Snoyman
+maintainer:          michael@snoyman.com
+copyright:           2016 Michael Snoyman
+category:            System
+build-type:          Simple
+extra-source-files:  README.md ChangeLog.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     System.Process.PID1
+  build-depends:       base >= 4 && < 5
+                     , process
+                     , unix
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+
+executable pid1
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -Wall -threaded
+  build-depends:       base
+                     , pid1
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/fpco/pid1
