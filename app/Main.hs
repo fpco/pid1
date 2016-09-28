@@ -10,7 +10,7 @@ main = do
 
     (cmd, args) <-
         case args0 of
-            [] -> error "pid1: No arguments provided"
+            [] -> error "No arguments provided"
             cmd:args -> return (cmd, args)
 
     run cmd args Nothing
