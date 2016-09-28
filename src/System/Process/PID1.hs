@@ -146,7 +146,11 @@ killAllChildren = do
 -- cause of termination, see 'signalToEC'.
 toExitCode :: ProcessStatus -> ExitCode
 toExitCode (Exited ec) = ec
+#if MIN_VERSION_unix(2, 7, 0)
 toExitCode (Terminated sig _) = signalToEC sig
+#else
+toExitCode (Terminated sig) = signalToEC sig
+#endif
 toExitCode (Stopped sig) = signalToEC sig
 
 -- | Follow the convention of converting a signal into an exit code by adding
