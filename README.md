@@ -18,7 +18,7 @@ Windows. If you have a use case where you think it makes sense to run on
 Windows, I'd be interested in hearing about it.
 
 For a discussion on why this is useful, see [this
-post](https://gist.github.com/snoyberg/caf8aeba588aaeecfa6ccf4c26f9f870#file-readme-md).
+repo](https://github.com/snoyberg/docker-testing#readme).
 
 ### Usage
 
