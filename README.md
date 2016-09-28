@@ -1,5 +1,7 @@
 ## pid1
 
+[![Build Status](https://travis-ci.org/fpco/pid1.svg?branch=master)](https://travis-ci.org/fpco/pid1)
+
 Do signal handling and orphan reaping for Unix PID1 init processes.
 
 This provides a Haskell library, and an executable based on that library, for
@@ -15,7 +17,8 @@ __NOTE__ This package is decidedly _not_ portable, and will not work on
 Windows. If you have a use case where you think it makes sense to run on
 Windows, I'd be interested in hearing about it.
 
-Blog post on some of the finer points here expected in the future.
+For a discussion on why this is useful, see [this
+post](https://gist.github.com/snoyberg/caf8aeba588aaeecfa6ccf4c26f9f870#file-readme-md).
 
 ### Usage
 
