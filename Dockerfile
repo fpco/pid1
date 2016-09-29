@@ -19,6 +19,7 @@ RUN chmod 755 /usr/local/bin/upx
 
 ADD ./ /usr/src/pid1
 WORKDIR /usr/src/pid1
+RUN stack build --only-dependencies      --test --ghc-options '-optc-Os -optl-static -fPIC'
 RUN stack --local-bin-path /sbin install --test --ghc-options '-optc-Os -optl-static -fPIC'
 RUN upx -q --best --ultra-brute /sbin/pid1
 WORKDIR /
