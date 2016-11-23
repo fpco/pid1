@@ -16,7 +16,7 @@ docker run --rm \
     -v $(pwd)/build-home:/home/build \
     fpco/static-base \
     /bin/bash -c \
-    'tar zxfv /sdist.tar.gz && cd pid1-* && stack install --test --local-bin-path /host-bin --ghc-options "-optl-static -fPIC -optc-Os" && upx --best --ultra-brute /host-bin/pid1'
+    'chown $(id -u) $HOME && rm -rf $HOME/pid1-* && tar zxfv /sdist.tar.gz && cd pid1-* && stack install --test --local-bin-path /host-bin --ghc-options "-optl-static -fPIC -optc-Os" && upx --best --ultra-brute /host-bin/pid1'
 
 
 cat > build-docker/Dockerfile <<EOF
