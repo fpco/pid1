@@ -25,7 +25,10 @@ library
 executable pid1
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -Wall -threaded -rtsopts=none -no-rtsopts-suggestions
+  if impl(ghc >= 8.0.1)
+    ghc-options:         -Wall -threaded -rtsopts=none -no-rtsopts-suggestions
+  else
+    ghc-options:         -Wall -threaded -rtsopts=none
   build-depends:       base
                      , pid1
   default-language:    Haskell2010
