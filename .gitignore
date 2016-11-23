@@ -1,3 +1,4 @@
 .stack-work/
 build-docker/
+build-home/
 *.swp
