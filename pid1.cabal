@@ -1,5 +1,5 @@
 name:                pid1
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Do signal handling and orphan reaping for Unix PID1 init processes
 description:         Please see README.md or view Haddocks at <https://www.stackage.org/package/pid1>
 homepage:            https://github.com/fpco/pid1#readme
@@ -25,7 +25,7 @@ library
 executable pid1
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -Wall -threaded
+  ghc-options:         -Wall -threaded -rtsopts=none -no-rtsopts-suggestions
   build-depends:       base
                      , pid1
   default-language:    Haskell2010
