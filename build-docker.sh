@@ -33,6 +33,6 @@ docker build --tag fpco/pid1:16.04 build-docker
 docker run --rm fpco/pid1:16.04 ps
 
 # Push
-docker tag fpco/pid1:16.04 fpco/pid1:latest
+docker tag -f fpco/pid1:16.04 fpco/pid1:latest
 docker push fpco/pid1:16.04
 docker push fpco/pid1:latest
