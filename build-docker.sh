@@ -2,8 +2,6 @@
 
 set -eux
 
-docker build --tag fpco/static-base static-base
-
 LAST_LINE=$(stack sdist 2>&1 | tail -n 1)
 SDIST=${LAST_LINE##* }
 
@@ -14,7 +12,7 @@ docker run --rm \
     -v $(pwd)/build-docker:/host-bin \
     -v $SDIST:/sdist.tar.gz \
     -v $(pwd)/build-home:/home/build \
-    fpco/static-base \
+    fpco/docker-static-haskell:8.0.1 \
     /bin/bash -c \
     'chown $(id -u) $HOME && rm -rf $HOME/pid1-* && tar zxfv /sdist.tar.gz && cd pid1-* && stack install --test --local-bin-path /host-bin --ghc-options "-optl-static -fPIC -optc-Os" && upx --best --ultra-brute /host-bin/pid1'
 
