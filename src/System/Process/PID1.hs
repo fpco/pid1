@@ -1,12 +1,20 @@
 {-# LANGUAGE CPP #-}
 module System.Process.PID1
-    ( run
+    ( RunOptions
+    , defaultRunOptions
+    , run
+    , runEnv
+    , runUser
+    , runGroup
+    , runWithOptions
+    , runWorkDir
     ) where
 
 import           Control.Concurrent       (forkIO, newEmptyMVar, takeMVar,
                                            threadDelay, tryPutMVar)
 import           Control.Exception        (assert, catch, throwIO)
-import           Control.Monad            (forever, void)
+import           Control.Monad            (forever, forM_, void)
+import           System.Directory         (setCurrentDirectory)
 import           System.Exit              (ExitCode (ExitFailure), exitWith)
 import           System.IO.Error          (isDoesNotExistError)
 import           System.Posix.Process     (ProcessStatus (..), executeFile,
@@ -16,12 +24,32 @@ import           System.Posix.Signals     (Handler (Catch), Signal,
                                            installHandler, sigINT, sigKILL,
                                            sigTERM, signalProcess)
 import           System.Posix.Types       (CPid)
+import           System.Posix.User        (getGroupEntryForName,
+                                           getUserEntryForName,
+                                           groupID, setGroupID,
+                                           setUserID, userID)
 import           System.Process           (createProcess, proc, env)
 import           System.Process.Internals (ProcessHandle__ (..),
                                            modifyProcessHandle)
 
+-- | Holder for pid1 run options
+data RunOptions = RunOptions
+  { -- optional environment variable override, default is current env
+    runEnv :: Maybe [(String, String)]
+    -- optional posix user name
+  , runUser :: Maybe String
+    -- optional posix group name
+  , runGroup :: Maybe String
+    -- optional working directory
+  , runWorkDir :: Maybe FilePath
+  } deriving Show
+
+-- | return default `RunOptions`
+defaultRunOptions :: RunOptions
+defaultRunOptions = RunOptions { runEnv = Nothing, runUser = Nothing, runGroup = Nothing, runWorkDir = Nothing }
+
 -- | Run the given command with specified arguments, with optional environment
--- variable override (default is to use the current process's environment)..
+-- variable override (default is to use the current process's environment).
 --
 -- This function will check if the current process has a process ID of 1. If it
 -- does, it will install signal handlers for SIGTERM and SIGINT, set up a loop
@@ -40,12 +68,29 @@ run :: FilePath -- ^ command to run
     -> Maybe [(String, String)]
     -- ^ optional environment variable override, default is current env
     -> IO a
-run cmd args env' = do
-    -- check if we should act as pid1 or just exec the process
-    myID <- getProcessID
-    if myID == 1
-        then runAsPID1 cmd args env'
-        else executeFile cmd True args env'
+run cmd args env' = runWithOptions (defaultRunOptions {runEnv = env'}) cmd args
+
+-- | Variant of 'run' that runs a command, with optional environment posix
+-- user/group and working directory (default is to use the current process's
+-- user, group, environment, and current directory).
+runWithOptions :: RunOptions -- ^ run options
+               -> FilePath -- ^ command to run
+               -> [String] -- ^ command line arguments
+               -> IO a
+runWithOptions opts cmd args = do
+  forM_ (runGroup opts) $ \name -> do
+    entry <- getGroupEntryForName name
+    setGroupID $ groupID entry
+  forM_ (runUser opts) $ \name -> do
+    entry <- getUserEntryForName name
+    setUserID $ userID entry
+  forM_ (runWorkDir opts) setCurrentDirectory
+  let env' = runEnv opts
+  -- check if we should act as pid1 or just exec the process
+  myID <- getProcessID
+  if myID == 1
+    then runAsPID1 cmd args env'
+    else executeFile cmd True args env'
 
 -- | Run as a child with signal handling and orphan reaping.
 runAsPID1 :: FilePath -> [String] -> Maybe [(String, String)] -> IO a
