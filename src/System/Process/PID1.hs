@@ -2,12 +2,16 @@
 module System.Process.PID1
     ( RunOptions
     , defaultRunOptions
+    , getRunEnv
+    , getRunGroup
+    , getRunUser
+    , getRunWorkDir
     , run
-    , runEnv
-    , runUser
-    , runGroup
     , runWithOptions
-    , runWorkDir
+    , setRunEnv
+    , setRunGroup
+    , setRunUser
+    , setRunWorkDir
     ) where
 
 import           Control.Concurrent       (forkIO, newEmptyMVar, takeMVar,
@@ -46,8 +50,58 @@ data RunOptions = RunOptions
   } deriving Show
 
 -- | return default `RunOptions`
+--
+-- @since 0.1.1.0
 defaultRunOptions :: RunOptions
 defaultRunOptions = RunOptions { runEnv = Nothing, runUser = Nothing, runGroup = Nothing, runWorkDir = Nothing }
+
+-- | Get environment variable overrides for the given `RunOptions`
+--
+-- @since 0.1.1.0
+getRunEnv :: RunOptions -> Maybe [(String, String)]
+getRunEnv = runEnv
+
+-- | Set environment variable overrides for the given `RunOptions`
+--
+-- @since 0.1.1.0
+setRunEnv :: [(String, String)] -> RunOptions -> RunOptions
+setRunEnv env' opts = opts { runEnv = Just env' }
+
+-- | Get the process 'setUserID' user for the given `RunOptions`
+--
+-- @since 0.1.1.0
+getRunUser :: RunOptions -> Maybe String
+getRunUser = runUser
+
+-- | Set the process 'setUserID' user for the given `RunOptions`
+--
+-- @since 0.1.1.0
+setRunUser :: String -> RunOptions -> RunOptions
+setRunUser user opts = opts { runUser = Just user }
+
+-- | Get the process 'setGroupID' group for the given `RunOptions`
+--
+-- @since 0.1.1.0
+getRunGroup :: RunOptions -> Maybe String
+getRunGroup = runGroup
+
+-- | Set the process 'setGroupID' group for the given `RunOptions`
+--
+-- @since 0.1.1.0
+setRunGroup :: String -> RunOptions -> RunOptions
+setRunGroup group opts = opts { runGroup = Just group }
+
+-- | Get the process current directory for the given `RunOptions`
+--
+-- @since 0.1.1.0
+getRunWorkDir :: RunOptions -> Maybe FilePath
+getRunWorkDir = runWorkDir
+
+-- | Set the process current directory for the given `RunOptions`
+--
+-- @since 0.1.1.0
+setRunWorkDir :: FilePath -> RunOptions -> RunOptions
+setRunWorkDir dir opts = opts { runWorkDir = Just dir }
 
 -- | Run the given command with specified arguments, with optional environment
 -- variable override (default is to use the current process's environment).

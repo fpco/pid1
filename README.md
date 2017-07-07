@@ -50,7 +50,3 @@ are:
    ```
    docker run --rm --entrypoint /usr/bin/env fpco/pid1 /sbin/pid1 ps
    ```
-   
-If running pid1 standalone outside of docker, pid1 supports similar run command
-line options for changing the user, group, and working directory of the
-executable.

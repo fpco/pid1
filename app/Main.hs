@@ -14,10 +14,10 @@ import System.Exit (exitFailure)
 -- | `GetOpt` command line options
 options :: [(String, String)] -> [OptDescr (RunOptions -> RunOptions)]
 options defaultEnv =
-  [ Option ['e'] ["env"] (ReqArg (\opt flags -> flags { runEnv = optEnvList (runEnv flags) opt }) "LIST") "set environment variables from list of comma separated name=value pairs. Can be specified multiple times"
-  , Option ['u'] ["user"] (ReqArg (\opt flags -> flags { runUser = Just opt }) "USER") "run command as user"
-  , Option ['g'] ["group"] (ReqArg (\opt flags -> flags { runGroup = Just opt}) "GROUP") "run command as group"
-  , Option ['w'] ["workdir"] (ReqArg (\opt flags -> flags { runWorkDir = Just opt}) "DIR") "command working directory"]
+  [ Option ['e'] ["env"] (ReqArg (\opt opts -> setRunEnv (optEnvList (getRunEnv opts) opt) opts) "LIST") "set environment variables from list of comma separated name=value pairs. Can be specified multiple times"
+  , Option ['u'] ["user"] (ReqArg setRunUser "USER") "run command as user"
+  , Option ['g'] ["group"] (ReqArg setRunGroup "GROUP") "run command as group"
+  , Option ['w'] ["workdir"] (ReqArg setRunWorkDir "DIR") "command working directory"]
   where optEnv env' kv =
           let kvp = fmap (drop 1) $ span (/= '=') kv in
             kvp:filter ((fst kvp /=) . fst) env'
@@ -25,9 +25,7 @@ options defaultEnv =
         split s = case fmap (drop 1) $ span (/= ',') s of
           ("", xs') -> split xs'
           (x, xs') -> x:split xs'
-        optEnvList env' s = Just
-          $ foldl' optEnv (fromMaybe defaultEnv env')
-          $ split s
+        optEnvList env' s = foldl' optEnv (fromMaybe defaultEnv env') $ split s
 
 main :: IO ()
 main = do
