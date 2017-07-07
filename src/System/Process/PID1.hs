@@ -13,7 +13,8 @@ module System.Process.PID1
 import           Control.Concurrent       (forkIO, newEmptyMVar, takeMVar,
                                            threadDelay, tryPutMVar)
 import           Control.Exception        (assert, catch, throwIO)
-import           Control.Monad            (forever, forM_, void)
+import           Control.Monad            (forever, void)
+import           Data.Foldable            (for_)
 import           System.Directory         (setCurrentDirectory)
 import           System.Exit              (ExitCode (ExitFailure), exitWith)
 import           System.IO.Error          (isDoesNotExistError)
@@ -73,18 +74,20 @@ run cmd args env' = runWithOptions (defaultRunOptions {runEnv = env'}) cmd args
 -- | Variant of 'run' that runs a command, with optional environment posix
 -- user/group and working directory (default is to use the current process's
 -- user, group, environment, and current directory).
+--
+-- @since 0.1.1.0
 runWithOptions :: RunOptions -- ^ run options
                -> FilePath -- ^ command to run
                -> [String] -- ^ command line arguments
                -> IO a
 runWithOptions opts cmd args = do
-  forM_ (runGroup opts) $ \name -> do
+  for_ (runGroup opts) $ \name -> do
     entry <- getGroupEntryForName name
     setGroupID $ groupID entry
-  forM_ (runUser opts) $ \name -> do
+  for_ (runUser opts) $ \name -> do
     entry <- getUserEntryForName name
     setUserID $ userID entry
-  forM_ (runWorkDir opts) setCurrentDirectory
+  for_ (runWorkDir opts) setCurrentDirectory
   let env' = runEnv opts
   -- check if we should act as pid1 or just exec the process
   myID <- getProcessID
