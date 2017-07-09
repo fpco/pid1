@@ -12,7 +12,7 @@ docker run --rm \
     -v $(pwd)/build-docker:/host-bin \
     -v $SDIST:/sdist.tar.gz \
     -v $(pwd)/build-home:/home/build \
-    fpco/docker-static-haskell:8.0.1 \
+    fpco/docker-static-haskell:8.0.2 \
     /bin/bash -c \
     'chown $(id -u) $HOME && rm -rf $HOME/pid1-* && tar zxfv /sdist.tar.gz && cd pid1-* && stack install --system-ghc --test --local-bin-path /host-bin --ghc-options "-optl-static -fPIC -optc-Os" && upx --best --ultra-brute /host-bin/pid1'
 
@@ -31,6 +31,6 @@ docker build --tag fpco/pid1:16.04 build-docker
 docker run --rm fpco/pid1:16.04 ps
 
 # Push
-docker tag -f fpco/pid1:16.04 fpco/pid1:latest
+docker tag fpco/pid1:16.04 fpco/pid1:latest
 docker push fpco/pid1:16.04
 docker push fpco/pid1:latest
