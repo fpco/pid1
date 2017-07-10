@@ -22,12 +22,11 @@ repo](https://github.com/snoyberg/docker-testing#readme).
 
 ### Usage
 
-> pid1 [-e|--env LIST][-u|--user USER] [-g|--group GROUP] [-w|--workdir DIR] COMMAND [ARG1 ARG2 ... ARGN] 
+> pid1 [-e|--env ENV] [-u|--user USER] [-g|--group GROUP] [-w|--workdir DIR] COMMAND [ARG1 ARG2 ... ARGN]
 
 Where:
-* `-e`, `--env` `LIST` - Override environment variables. Comma separated
-  key=value pairs of environment variables to override in the existing
-  environment.
+* `-e`, `--env` `ENV` - Override environment variable from given name=value
+  pair. Can be specified multiple times to set multiple environment variables.
 * `-u`, `--user` `USER` - The username the process will setuid before executing
   COMMAND
 * `-g`, `--group` `GROUP` - The group name the process will setgid before
