@@ -3,12 +3,14 @@ module System.Process.PID1
     ( RunOptions
     , defaultRunOptions
     , getRunEnv
+    , getRunExitTimeoutSec
     , getRunGroup
     , getRunUser
     , getRunWorkDir
     , run
     , runWithOptions
     , setRunEnv
+    , setRunExitTimeoutSec
     , setRunGroup
     , setRunUser
     , setRunWorkDir
@@ -47,13 +49,21 @@ data RunOptions = RunOptions
   , runGroup :: Maybe String
     -- optional working directory
   , runWorkDir :: Maybe FilePath
+    -- timeout (in seconds) to wait for all child processes to exit after
+    -- receiving SIGTERM or SIGINT signal
+  , runExitTimeoutSec :: Int
   } deriving Show
 
 -- | return default `RunOptions`
 --
 -- @since 0.1.1.0
 defaultRunOptions :: RunOptions
-defaultRunOptions = RunOptions { runEnv = Nothing, runUser = Nothing, runGroup = Nothing, runWorkDir = Nothing }
+defaultRunOptions = RunOptions
+  { runEnv = Nothing
+  , runUser = Nothing
+  , runGroup = Nothing
+  , runWorkDir = Nothing
+  , runExitTimeoutSec = 5 }
 
 -- | Get environment variable overrides for the given `RunOptions`
 --
@@ -103,6 +113,20 @@ getRunWorkDir = runWorkDir
 setRunWorkDir :: FilePath -> RunOptions -> RunOptions
 setRunWorkDir dir opts = opts { runWorkDir = Just dir }
 
+-- | Return the timeout (in seconds) timeout (in seconds) to wait for all child
+-- processes to exit after receiving SIGTERM or SIGINT signal
+--
+-- @since 0.1.2.0
+getRunExitTimeoutSec :: RunOptions -> Int
+getRunExitTimeoutSec = runExitTimeoutSec
+
+-- | Set the timeout in seconds for the process reaper to wait for all child
+-- processes to exit after receiving SIGTERM or SIGINT signal
+--
+-- @since 0.1.2.0
+setRunExitTimeoutSec :: Int -> RunOptions -> RunOptions
+setRunExitTimeoutSec sec opts = opts { runExitTimeoutSec = sec }
+
 -- | Run the given command with specified arguments, with optional environment
 -- variable override (default is to use the current process's environment).
 --
@@ -143,22 +167,23 @@ runWithOptions opts cmd args = do
     setUserID $ userID entry
   for_ (runWorkDir opts) setCurrentDirectory
   let env' = runEnv opts
+      timeout = runExitTimeoutSec opts
   -- check if we should act as pid1 or just exec the process
   myID <- getProcessID
   if myID == 1
-    then runAsPID1 cmd args env'
+    then runAsPID1 cmd args env' timeout
     else executeFile cmd True args env'
 
 -- | Run as a child with signal handling and orphan reaping.
-runAsPID1 :: FilePath -> [String] -> Maybe [(String, String)] -> IO a
-runAsPID1 cmd args env' = do
+runAsPID1 :: FilePath -> [String] -> Maybe [(String, String)] -> Int -> IO a
+runAsPID1 cmd args env' timeout = do
     -- Set up an MVar to indicate we're ready to start killing all
     -- children processes. Then start a thread waiting for that
     -- variable to be filled and do the actual killing.
     killChildrenVar <- newEmptyMVar
     _ <- forkIO $ do
         takeMVar killChildrenVar
-        killAllChildren
+        killAllChildren timeout
 
     -- Helper function to start killing, used below
     let startKilling = void $ tryPutMVar killChildrenVar ()
@@ -222,19 +247,19 @@ reap startKilling child = do
                     startKilling
                 | otherwise -> return ()
 
-killAllChildren :: IO ()
-killAllChildren = do
+killAllChildren :: Int -> IO ()
+killAllChildren timeout = do
     -- Send all children processes the TERM signal
     signalProcess sigTERM (-1) `catch` \e ->
         if isDoesNotExistError e
             then return ()
             else throwIO e
 
-    -- Wait for five seconds. We don't need to put in any logic about
+    -- Wait for `timeout` seconds. We don't need to put in any logic about
     -- whether there are still child processes; if all children have
     -- exited, then the reap loop will exit and our process will shut
     -- down.
-    threadDelay $ 5 * 1000 * 1000
+    threadDelay $ timeout * 1000 * 1000
 
     -- OK, some children didn't exit. Now time to get serious!
     signalProcess sigKILL (-1) `catch` \e ->

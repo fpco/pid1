@@ -22,7 +22,7 @@ repo](https://github.com/snoyberg/docker-testing#readme).
 
 ### Usage
 
-> pid1 [-e|--env ENV] [-u|--user USER] [-g|--group GROUP] [-w|--workdir DIR] COMMAND [ARG1 ARG2 ... ARGN]
+> pid1 [-e|--env ENV] [-u|--user USER] [-g|--group GROUP] [-w|--workdir DIR] [-t|--timeout TIMEOUT] COMMAND [ARG1 ARG2 ... ARGN]
 
 Where:
 * `-e`, `--env` `ENV` - Override environment variable from given name=value
@@ -32,6 +32,7 @@ Where:
 * `-g`, `--group` `GROUP` - The group name the process will setgid before
   executing COMMAND
 * `-w`, `--workdir` `DIR` - chdir to `DIR` before executing COMMAND
+* `-t`, `--timeout` `TIMEOUT` - timeout (in seconds) to wait for all child processes to exit
 
 The recommended use case for this executable is to embed it in a Docker image.
 Assuming you've placed it at `/sbin/pid1`, the two commonly recommended usages

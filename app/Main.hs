@@ -16,7 +16,8 @@ options defaultEnv =
   [ Option ['e'] ["env"] (ReqArg (\opt opts -> setRunEnv (optEnvList (getRunEnv opts) opt) opts) "ENV") "override environment variable from given name=value pair. Can be specified multiple times to set multiple environment variables"
   , Option ['u'] ["user"] (ReqArg setRunUser "USER") "run command as user"
   , Option ['g'] ["group"] (ReqArg setRunGroup "GROUP") "run command as group"
-  , Option ['w'] ["workdir"] (ReqArg setRunWorkDir "DIR") "command working directory"]
+  , Option ['w'] ["workdir"] (ReqArg setRunWorkDir "DIR") "command working directory"
+  , Option ['t'] ["timeout"] (ReqArg (setRunExitTimeoutSec . read) "TIMEOUT") "timeout (in seconds) to wait for all child processes to exit" ]
   where optEnv env' kv =
           let kvp = fmap (drop 1) $ span (/= '=') kv in
             kvp:filter ((fst kvp /=) . fst) env'

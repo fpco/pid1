@@ -2,6 +2,7 @@
 
 * Removes support for ',' separated list of environment variables
   for `-e` command line option
+* Adds support for setting child processes wait timeout on SIGTERM or SIGINT
 
 ## 0.1.1.0
 
