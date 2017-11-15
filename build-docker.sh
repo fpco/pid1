@@ -2,6 +2,7 @@
 
 set -eux
 
+VERSION=$(grep "^version:" pid1.cabal | cut -d " " -f14)
 LAST_LINE=$(stack sdist 2>&1 | tail -n 1)
 SDIST=${LAST_LINE##* }
 
@@ -32,5 +33,7 @@ docker run --rm fpco/pid1:16.04 ps
 
 # Push
 docker tag fpco/pid1:16.04 fpco/pid1:latest
+docker tag fpco/pid1:16.04 fpco/pid1:${VERSION}
 docker push fpco/pid1:16.04
+docker push fpco/pid1:${VERSION}
 docker push fpco/pid1:latest
