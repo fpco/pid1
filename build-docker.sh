@@ -3,7 +3,7 @@
 set -eux
 
 VERSION=$(grep "^version:" pid1.cabal | cut -d " " -f14)
-LAST_LINE=$(stack sdist 2>&1 | tail -n 1)
+LAST_LINE=$(stack sdist --ignore-check 2>&1 | tail -n 1)
 SDIST=${LAST_LINE##* }
 
 rm -rf build-docker
