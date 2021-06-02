@@ -7,10 +7,12 @@ module System.Process.PID1
     , getRunGroup
     , getRunUser
     , getRunWorkDir
+    , getRunSignalImmediateChildOnly
     , run
     , runWithOptions
     , setRunEnv
     , setRunExitTimeoutSec
+    , setRunSignalImmediateChildOnly
     , setRunGroup
     , setRunUser
     , setRunWorkDir
@@ -52,6 +54,7 @@ data RunOptions = RunOptions
     -- timeout (in seconds) to wait for all child processes to exit after
     -- receiving SIGTERM or SIGINT signal
   , runExitTimeoutSec :: Int
+  , runSignalImmediateChildOnly :: Bool
   } deriving Show
 
 -- | return default `RunOptions`
@@ -63,7 +66,8 @@ defaultRunOptions = RunOptions
   , runUser = Nothing
   , runGroup = Nothing
   , runWorkDir = Nothing
-  , runExitTimeoutSec = 5 }
+  , runExitTimeoutSec = 5
+  , runSignalImmediateChildOnly = False }
 
 -- | Get environment variable overrides for the given `RunOptions`
 --
@@ -127,6 +131,19 @@ getRunExitTimeoutSec = runExitTimeoutSec
 setRunExitTimeoutSec :: Int -> RunOptions -> RunOptions
 setRunExitTimeoutSec sec opts = opts { runExitTimeoutSec = sec }
 
+-- | Return boolean flag if we should only send SIGTERM to the immediate child process
+--
+--- @since 0.1.3.0
+getRunSignalImmediateChildOnly :: RunOptions -> Bool
+getRunSignalImmediateChildOnly = runSignalImmediateChildOnly
+
+-- | Set boolean flag if we should only send SIGTERM to the immediate child process
+--
+-- @since 0.1.3.0
+setRunSignalImmediateChildOnly :: Bool -> RunOptions -> RunOptions
+setRunSignalImmediateChildOnly x opts = opts { runSignalImmediateChildOnly = x }
+
+
 -- | Run the given command with specified arguments, with optional environment
 -- variable override (default is to use the current process's environment).
 --
@@ -168,22 +185,20 @@ runWithOptions opts cmd args = do
   for_ (runWorkDir opts) setCurrentDirectory
   let env' = runEnv opts
       timeout = runExitTimeoutSec opts
+      single = runSignalImmediateChildOnly opts
   -- check if we should act as pid1 or just exec the process
   myID <- getProcessID
   if myID == 1
-    then runAsPID1 cmd args env' timeout
+    then runAsPID1 single cmd args env' timeout
     else executeFile cmd True args env'
 
 -- | Run as a child with signal handling and orphan reaping.
-runAsPID1 :: FilePath -> [String] -> Maybe [(String, String)] -> Int -> IO a
-runAsPID1 cmd args env' timeout = do
+runAsPID1 :: Bool -> FilePath -> [String] -> Maybe [(String, String)] -> Int -> IO a
+runAsPID1 single cmd args env' timeout = do
     -- Set up an MVar to indicate we're ready to start killing all
     -- children processes. Then start a thread waiting for that
     -- variable to be filled and do the actual killing.
     killChildrenVar <- newEmptyMVar
-    _ <- forkIO $ do
-        takeMVar killChildrenVar
-        killAllChildren timeout
 
     -- Helper function to start killing, used below
     let startKilling = void $ tryPutMVar killChildrenVar ()
@@ -205,6 +220,13 @@ runAsPID1 cmd args env' timeout = do
         case p_ of
             ClosedHandle e -> assert False (exitWith e)
             OpenHandle pid -> return pid
+
+    _ <- forkIO $ do
+        takeMVar killChildrenVar
+        if single then
+          killImmediateChild child timeout
+        else
+          killAllChildren timeout
 
     -- Loop on reaping child processes
     reap startKilling child
@@ -251,6 +273,26 @@ killAllChildren :: Int -> IO ()
 killAllChildren timeout = do
     -- Send all children processes the TERM signal
     signalProcess sigTERM (-1) `catch` \e ->
+        if isDoesNotExistError e
+            then return ()
+            else throwIO e
+
+    -- Wait for `timeout` seconds. We don't need to put in any logic about
+    -- whether there are still child processes; if all children have
+    -- exited, then the reap loop will exit and our process will shut
+    -- down.
+    threadDelay $ timeout * 1000 * 1000
+
+    -- OK, some children didn't exit. Now time to get serious!
+    signalProcess sigKILL (-1) `catch` \e ->
+        if isDoesNotExistError e
+            then return ()
+            else throwIO e
+
+killImmediateChild :: CPid -> Int -> IO ()
+killImmediateChild cid timeout = do
+    -- Send immediate child processes the TERM signal
+    signalProcess sigTERM cid `catch` \e ->
         if isDoesNotExistError e
             then return ()
             else throwIO e
