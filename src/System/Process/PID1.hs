@@ -181,9 +181,6 @@ runAsPID1 cmd args env' timeout = do
     -- children processes. Then start a thread waiting for that
     -- variable to be filled and do the actual killing.
     killChildrenVar <- newEmptyMVar
-    _ <- forkIO $ do
-        takeMVar killChildrenVar
-        killAllChildren timeout
 
     -- Helper function to start killing, used below
     let startKilling = void $ tryPutMVar killChildrenVar ()
@@ -205,6 +202,10 @@ runAsPID1 cmd args env' timeout = do
         case p_ of
             ClosedHandle e -> assert False (exitWith e)
             OpenHandle pid -> return pid
+
+    _ <- forkIO $ do
+        takeMVar killChildrenVar
+        killAllChildren child timeout
 
     -- Loop on reaping child processes
     reap startKilling child
@@ -247,9 +248,20 @@ reap startKilling child = do
                     startKilling
                 | otherwise -> return ()
 
-killAllChildren :: Int -> IO ()
-killAllChildren timeout = do
-    -- Send all children processes the TERM signal
+killAllChildren :: CPid -> Int -> IO ()
+killAllChildren cid timeout = do
+    -- Send the direct child process the TERM signal
+    signalProcess sigTERM cid `catch` \e ->
+        if isDoesNotExistError e
+            then return ()
+            else throwIO e
+
+    -- Wait for `timeout` seconds and allow the 'main' process to take care
+    -- of shutting down any child processes itself.
+    threadDelay $ timeout * 1000 * 1000
+
+    -- If the 'main' process did not handle shutting down the rest of the
+    -- child processes we will signal SIGTERM to them directly.
     signalProcess sigTERM (-1) `catch` \e ->
         if isDoesNotExistError e
             then return ()
