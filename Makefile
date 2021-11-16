@@ -1,4 +1,4 @@
-.PHONY: build repl test release help
+.PHONY: build repl test release static help
 
 .DEFAULT_GOAL = help
 
