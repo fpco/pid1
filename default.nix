@@ -6,27 +6,26 @@
 }:
 let
   cabalPackageName = "pid1";
-  compiler = "ghc844"; # matching stack.yaml
+  compiler = "ghc8104"; # matching stack.yaml
 
   # Pin static-haskell-nix version.
   static-haskell-nix =
     if builtins.pathExists ../.in-static-haskell-nix
       then toString ../. # for the case that we're in static-haskell-nix itself, so that CI always builds the latest version.
       # Update this hash to use a different `static-haskell-nix` version:
-      else fetchTarball https://github.com/nh2/static-haskell-nix/archive/95fa110091dff2bf6dace3921c18a26c264d776e.tar.gz;
+      else fetchTarball https://github.com/nh2/static-haskell-nix/archive/57147ba740363712f589d24dfa005c8c7f6d1056.tar.gz;
 
   # Pin nixpkgs version
   # By default to the one `static-haskell-nix` provides, but you may also give
   # your own as long as it has the necessary patches, using e.g.
-  pkgs = import (fetchTarball https://github.com/nixos/nixpkgs/archive/ca3531850844e185d483fb878fcd00c6b44069e5.tar.gz) {};
-  # pkgs = import "${static-haskell-nix}/nixpkgs.nix";
-  # pkgs = import (import ./nix/sources.nix).nixpkgs {};
-
+  #     pkgs = import (fetchTarball https://github.com/nh2/nixpkgs/archive/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa123.tar.gz) {};
+  pkgs = import "${static-haskell-nix}/nixpkgs.nix";
 
   stack2nix-script = import "${static-haskell-nix}/static-stack2nix-builder/stack2nix-script.nix" {
     inherit pkgs;
+    inherit compiler;
     stack-project-dir = toString ./.; # where stack.yaml is
-    hackageSnapshot = "2020-02-24T00:00:00Z"; # pins e.g. extra-deps without hashes or revisions
+    hackageSnapshot = "2021-07-11T00:00:00Z"; # pins e.g. extra-deps without hashes or revisions
   };
 
   static-stack2nix-builder = import "${static-haskell-nix}/static-stack2nix-builder/default.nix" {
@@ -64,7 +63,7 @@ let
 
 in
   {
-    inherit static_package;
+    static_package = static-stack2nix-builder.static_package;
     inherit fullBuildScript;
     # For debugging:
     inherit stack2nix-script;
