@@ -202,6 +202,7 @@ runAsPID1 cmd args env' timeout = do
         case p_ of
             ClosedHandle e -> assert False (exitWith e)
             OpenHandle pid -> return pid
+            OpenExtHandle{} -> error "OpenExtHandle is a Windows concept, and pid1 is not designed to run on that"
 
     _ <- forkIO $ do
         takeMVar killChildrenVar
