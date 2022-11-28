@@ -202,6 +202,7 @@ runAsPID1 cmd args env' timeout = do
         case p_ of
             ClosedHandle e -> assert False (exitWith e)
             OpenHandle pid -> return pid
+            OpenExtHandle pid _ -> return pid
 
     _ <- forkIO $ do
         takeMVar killChildrenVar
