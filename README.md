@@ -32,7 +32,7 @@ Where:
 * `-g`, `--group` `GROUP` - The group name the process will setgid before
   executing COMMAND
 * `-w`, `--workdir` `DIR` - chdir to `DIR` before executing COMMAND
-* `-t`, `--timeout` `TIMEOUT` - timeout (in seconds) to wait for all child processes to exit
+* `-t`, `--timeout` `TIMEOUT` - timeout (in seconds) to wait for all child processes to exit (Default is 5 seconds)
 
 `WARNING`: by default pid1 will first send the TERM signal to it's "immediate child" process.
 In most scenarios that will be the only process running but in some cases that will be the
