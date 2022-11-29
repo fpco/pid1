@@ -1,6 +1,6 @@
-## pid1
+# pid1
 
-[![Build Status](https://travis-ci.org/fpco/pid1.svg?branch=master)](https://travis-ci.org/fpco/pid1)
+[![Build](https://github.com/fpco/pid1/actions/workflows/build.yml/badge.svg)](https://github.com/fpco/pid1/actions/workflows/build.yml)
 
 Do signal handling and orphan reaping for Unix PID1 init processes.
 
@@ -20,7 +20,7 @@ Windows, I'd be interested in hearing about it.
 For a discussion on why this is useful, see [this
 repo](https://github.com/snoyberg/docker-testing#readme).
 
-### Usage
+## Usage
 
 > pid1 [-e|--env ENV] [-u|--user USER] [-g|--group GROUP] [-w|--workdir DIR] [-t|--timeout TIMEOUT] COMMAND [ARG1 ARG2 ... ARGN]
 
@@ -32,7 +32,7 @@ Where:
 * `-g`, `--group` `GROUP` - The group name the process will setgid before
   executing COMMAND
 * `-w`, `--workdir` `DIR` - chdir to `DIR` before executing COMMAND
-* `-t`, `--timeout` `TIMEOUT` - timeout (in seconds) to wait for all child processes to exit
+* `-t`, `--timeout` `TIMEOUT` - timeout (in seconds) to wait for all child processes to exit (Default is 5 seconds)
 
 `WARNING`: by default pid1 will first send the TERM signal to it's "immediate child" process.
 In most scenarios that will be the only process running but in some cases that will be the
@@ -59,3 +59,8 @@ are:
    ```
    docker run --rm --entrypoint /usr/bin/env fpco/pid1 /sbin/pid1 ps
    ```
+
+## Docker images
+
+You can find various docker images [here](https://registry.hub.docker.com/r/fpco/pid1/tags). We usually target Ubuntu
+LTS as the parent image.
