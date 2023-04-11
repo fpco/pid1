@@ -34,10 +34,10 @@ Where:
 * `-w`, `--workdir` `DIR` - chdir to `DIR` before executing COMMAND
 * `-t`, `--timeout` `TIMEOUT` - timeout (in seconds) to wait for all child processes to exit (Default is 5 seconds)
 
-`WARNING`: by default pid1 will first send the TERM signal to it's "immediate child" process.
+`WARNING`: by default pid1 will first send the TERM signal to its "immediate child" process.
 In most scenarios that will be the only process running but in some cases that will be the
-"main" process that could have spawned it's own children. In this scenario it's prudent to shutdown
-the "main" process first, since usually it has mechanisms in place to shut down it's children. If
+"main" process that could have spawned its own children. In this scenario it's prudent to shutdown
+the "main" process first, since usually it has mechanisms in place to shut down its children. If
 we were to shutdown a child process before "main" was shutdown it might try to restart it.
 This is why, if the "main" process doesn't exit within `timeout` we will proceed to send the TERM
 signal to all processes and wait **again** for `timeout` until we finally send the KILL signal to all
