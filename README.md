@@ -64,3 +64,15 @@ are:
 
 You can find various docker images [here](https://registry.hub.docker.com/r/fpco/pid1/tags). We usually target Ubuntu
 LTS as the parent image.
+
+Alternatively, you can download the static `pid1` binary as part of your docker image. Example:
+
+``` dockerfile
+FROM alpine:3.14.2
+
+ADD https://github.com/fpco/pid1/releases/download/v0.1.3.1/pid1 /usr/bin/pid1
+
+RUN chmod +x /usr/bin/pid1
+
+ENTRYPOINT [ "pid1" ]
+```
